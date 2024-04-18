@@ -16,9 +16,6 @@ set(G2O_LIB_VERSION   "0.1.0" CACHE STRING "g2o library version")
 set(G2O_LIB_SOVERSION "0.1"   CACHE STRING "g2o library soversion")
 set(G2O_VERSION 1.0.0)
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-
 # manually check for top-level project if CMake is older than 3.21
 if(CMAKE_VERSION VERSION_LESS 3.21)
   string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
