@@ -12,3 +12,9 @@ make
 bash zip_lib.sh
 ```
 
+## 依赖项
+```
+sudo apt-get install libsuitesparse-dev
+
+```
+
