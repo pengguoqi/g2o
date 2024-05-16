@@ -28,44 +28,45 @@
 #define G2O_SE3_LOTSOF_XYZ
 
 #include "g2o/config.h"
-#include "g2o/core/base_variable_sized_edge.h"
 #include "g2o_types_slam3d_api.h"
-#include "vertex_pointxyz.h"
+#include "g2o/core/base_variable_sized_edge.h"
 #include "vertex_se3.h"
+#include "vertex_pointxyz.h"
 
-namespace g2o {
+namespace g2o{
 
-class G2O_TYPES_SLAM3D_API EdgeSE3LotsOfXYZ
-    : public BaseVariableSizedEdge<-1, VectorX> {
- protected:
-  unsigned int _observedPoints;
+  class G2O_TYPES_SLAM3D_API EdgeSE3LotsOfXYZ : public BaseVariableSizedEdge<-1, VectorX>{
 
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  EdgeSE3LotsOfXYZ();
+    protected:
+      unsigned int _observedPoints;
 
-  void setSize(int vertices) {
-    resize(vertices);
-    _observedPoints = vertices - 1;
-    _measurement.resize(_observedPoints * 3, 1);
-    setDimension(_observedPoints * 3);
-  }
+    public:
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+      EdgeSE3LotsOfXYZ();
 
-  virtual void computeError();
+      void setSize(int vertices){
+        resize(vertices);
+        _observedPoints = vertices-1;
+        _measurement.resize(_observedPoints*3, 1);
+        setDimension(_observedPoints*3);
+      }
 
-  virtual bool read(std::istream& is);
-  virtual bool write(std::ostream& os) const;
+      virtual void computeError();
 
-  virtual bool setMeasurementFromState();
+      virtual bool read(std::istream& is);
+      virtual bool write(std::ostream& os) const;
 
-  virtual void initialEstimate(const OptimizableGraph::VertexSet&,
-                               OptimizableGraph::Vertex*);
-  virtual double initialEstimatePossible(const OptimizableGraph::VertexSet&,
-                                         OptimizableGraph::Vertex*);
+      virtual bool setMeasurementFromState();
 
-  virtual void linearizeOplus();
-};
+      virtual void initialEstimate(const OptimizableGraph::VertexSet&, OptimizableGraph::Vertex*);
+      virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet&, OptimizableGraph::Vertex*);
 
-}  // namespace g2o
+      virtual void linearizeOplus();
 
-#endif  // G2O_SE3_LOTSOF_XYZ
+  };
+
+}
+
+
+
+#endif // G2O_SE3_LOTSOF_XYZ

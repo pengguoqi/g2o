@@ -24,8 +24,8 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef G2O_OPTIMIZATION_ALGORITHM_FACTORY_H
-#define G2O_OPTIMIZATION_ALGORITHM_FACTORY_H
+#ifndef G2O_OPTMIZATION_ALGORITHM_PROPERTY_H
+#define G2O_OPTMIZATION_ALGORITHM_PROPERTY_H
 
 #include <iostream>
 #include <list>
@@ -37,7 +37,7 @@
 #include "optimization_algorithm_property.h"
 
 // define to get some verbose output
-// #define G2O_DEBUG_OPTIMIZATION_ALGORITHM_FACTORY
+//#define G2O_DEBUG_OPTIMIZATION_ALGORITHM_FACTORY
 
 namespace g2o {
 
@@ -67,13 +67,12 @@ class G2O_CORE_API AbstractOptimizationAlgorithmCreator {
  * \brief create solvers based on their short name
  *
  * Factory to allocate solvers based on their short name.
- * The Factory is implemented as a singleton and the single
+ * The Factory is implemented as a sigleton and the single
  * instance can be accessed via the instance() function.
  */
 class G2O_CORE_API OptimizationAlgorithmFactory {
  public:
-  typedef std::list<std::shared_ptr<AbstractOptimizationAlgorithmCreator>>
-      CreatorList;
+  typedef std::list<std::shared_ptr<AbstractOptimizationAlgorithmCreator>> CreatorList;
 
   //! return the instance
   static OptimizationAlgorithmFactory* instance();
@@ -82,27 +81,23 @@ class G2O_CORE_API OptimizationAlgorithmFactory {
   static void destroy();
 
   OptimizationAlgorithmFactory(OptimizationAlgorithmFactory const&) = delete;
-  OptimizationAlgorithmFactory& operator=(OptimizationAlgorithmFactory const&) =
-      delete;
+  OptimizationAlgorithmFactory& operator=(OptimizationAlgorithmFactory const&) = delete;
 
   /**
    * register a specific creator for allocating a solver
    */
-  void registerSolver(
-      const std::shared_ptr<AbstractOptimizationAlgorithmCreator>& c);
+  void registerSolver(const std::shared_ptr<AbstractOptimizationAlgorithmCreator>& c);
 
   /**
    * unregister a specific creator for allocating a solver
    */
-  void unregisterSolver(
-      const std::shared_ptr<AbstractOptimizationAlgorithmCreator>& c);
+  void unregisterSolver(const std::shared_ptr<AbstractOptimizationAlgorithmCreator>& c);
 
   /**
    * construct a solver based on its name, e.g., var, fix3_2_cholmod
    */
-  OptimizationAlgorithm* construct(
-      const std::string& tag,
-      OptimizationAlgorithmProperty& solverProperty) const;
+  OptimizationAlgorithm* construct(const std::string& tag,
+                                   OptimizationAlgorithmProperty& solverProperty) const;
 
   //! list the known solvers into a stream
   void listSolvers(std::ostream& os) const;
@@ -127,8 +122,8 @@ class RegisterOptimizationAlgorithmProxy {
   RegisterOptimizationAlgorithmProxy(AbstractOptimizationAlgorithmCreator* c) {
     _creator.reset(c);
 #ifdef G2O_DEBUG_OPTIMIZATION_ALGORITHM_FACTORY
-    std::cout << __FUNCTION__ << ": Registering " << _creator->property().name
-              << " of type " << typeid(*_creator).name() << std::endl;
+    std::cout << __FUNCTION__ << ": Registering " << _creator->property().name << " of type "
+              << typeid(*_creator).name() << std::endl;
 #endif
     OptimizationAlgorithmFactory::instance()->registerSolver(_creator);
   }
@@ -151,7 +146,7 @@ class RegisterOptimizationAlgorithmProxy {
  * Use the following macro to register a whole library of
  * algorithms to the factory, e.g.,
  * G2O_REGISTER_OPTIMIZATION_LIBRARY(csparse)
- * In another program that links to your library or loads
+ * In another programm that links to your library or loads
  * it via dlopen() (or similar functions) you should indicate
  * the desired usage of the solver by using the
  * G2O_REGISTER_OPTIMIZATION_LIBRARY() macro. Here, you
@@ -167,33 +162,29 @@ class RegisterOptimizationAlgorithmProxy {
  * to the library containing the solver. Hence, the usage of the macro
  * should enforce that the library is actually linked with the binary.
  */
-#define G2O_USE_OPTIMIZATION_LIBRARY(libraryname)                              \
-  extern "C" void G2O_OAF_IMPORT g2o_optimization_library_##libraryname(void); \
-  static g2o::ForceLinker                                                      \
-      g2o_force_optimization_algorithm_library_##libraryname(                  \
-          g2o_optimization_library_##libraryname);
+#define G2O_USE_OPTIMIZATION_LIBRARY(libraryname)                                 \
+  extern "C" void G2O_OAF_IMPORT g2o_optimization_library_##libraryname(void);    \
+  static g2o::ForceLinker g2o_force_optimization_algorithm_library_##libraryname( \
+      g2o_optimization_library_##libraryname);
 
 /**
  * Similarly to G2O_OAF_IMPORT this macro allows to register a singla
  * more specific algorithm to the library, i.e., gn_var, where gn_var
  * corresponds to a specific instance of csparse based solver for example
  */
-#define G2O_REGISTER_OPTIMIZATION_ALGORITHM(optimizername, instance)         \
-  extern "C" void G2O_OAF_EXPORT g2o_optimization_algorithm_##optimizername( \
-      void) {}                                                               \
-  static g2o::RegisterOptimizationAlgorithmProxy                             \
-      g_optimization_algorithm_proxy_##optimizername(instance);
+#define G2O_REGISTER_OPTIMIZATION_ALGORITHM(optimizername, instance)                             \
+  extern "C" void G2O_OAF_EXPORT g2o_optimization_algorithm_##optimizername(void) {}             \
+  static g2o::RegisterOptimizationAlgorithmProxy g_optimization_algorithm_proxy_##optimizername( \
+      instance);
 
 /**
  * see the documentation of the macros above.
  * It allows to enforce linking to library that contains a specific
  * solver instance and guarantees its usage with the factory
  */
-#define G2O_USE_OPTIMIZATION_ALGORITHM(optimizername)                        \
-  extern "C" void G2O_OAF_IMPORT g2o_optimization_algorithm_##optimizername( \
-      void);                                                                 \
-  static g2o::ForceLinker                                                    \
-      g2o_force_optimization_algorithm_link_##optimizername(                 \
-          g2o_optimization_algorithm_##optimizername);
+#define G2O_USE_OPTIMIZATION_ALGORITHM(optimizername)                              \
+  extern "C" void G2O_OAF_IMPORT g2o_optimization_algorithm_##optimizername(void); \
+  static g2o::ForceLinker g2o_force_optimization_algorithm_link_##optimizername(   \
+      g2o_optimization_algorithm_##optimizername);
 
 #endif

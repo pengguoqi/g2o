@@ -32,16 +32,16 @@
 #include <limits>
 
 #include "base_edge.h"
-#include "g2o/autodiff/fixed_array.h"
 #include "g2o/config.h"
 #include "g2o/stuff/misc.h"
 #include "robust_kernel.h"
 
+#include "g2o/EXTERNAL/ceres/fixed_array.h"
+
 namespace g2o {
 
 /**
- * \brief base class to represent an edge connecting an arbitrary number of
- * nodes
+ * \brief base class to represent an edge connecting an arbitrary number of nodes
  *
  * D - Dimension of the measurement
  * E - type to represent the measurement
@@ -64,9 +64,7 @@ class BaseVariableSizedEdge : public BaseEdge<D, E> {
   typedef MatrixX::MapType JacobianType;
   typedef typename BaseEdge<D, E>::ErrorVector ErrorVector;
   typedef typename BaseEdge<D, E>::InformationType InformationType;
-  typedef Eigen::Map<MatrixX, MatrixX::Flags & Eigen::PacketAccessBit
-                                  ? Eigen::Aligned
-                                  : Eigen::Unaligned>
+  typedef Eigen::Map<MatrixX, MatrixX::Flags & Eigen::PacketAccessBit ? Eigen::Aligned : Eigen::Unaligned>
       HessianBlockType;
 
   BaseVariableSizedEdge() : BaseEdge<D, E>() {}
@@ -85,7 +83,7 @@ class BaseVariableSizedEdge : public BaseEdge<D, E> {
 
   virtual void constructQuadraticForm();
 
-  virtual void mapHessianMemory(double* d, int i, int j, bool rowMajor);
+  virtual void mapHessianMemory(number_t* d, int i, int j, bool rowMajor);
 
   using BaseEdge<D, E>::computeError;
 
@@ -97,11 +95,10 @@ class BaseVariableSizedEdge : public BaseEdge<D, E> {
   using BaseEdge<D, E>::_dimension;
 
   std::vector<HessianHelper> _hessian;
-  std::vector<JacobianType>
+  std::vector<JacobianType, Eigen::aligned_allocator<JacobianType> >
       _jacobianOplus;  ///< jacobians of the edge (w.r.t. oplus)
 
-  void computeQuadraticForm(const InformationType& omega,
-                            const ErrorVector& weightedError);
+  void computeQuadraticForm(const InformationType& omega, const ErrorVector& weightedError);
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

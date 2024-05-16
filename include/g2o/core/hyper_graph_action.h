@@ -38,7 +38,7 @@
 #include "hyper_graph.h"
 
 // define to get verbose output
-// #define G2O_DEBUG_ACTIONLIB
+//#define G2O_DEBUG_ACTIONLIB
 
 namespace g2o {
 
@@ -64,8 +64,7 @@ class G2O_CORE_API HyperGraphAction {
   /**
    * re-implement to carry out an action given the graph
    */
-  virtual HyperGraphAction* operator()(const HyperGraph* graph,
-                                       Parameters* parameters = 0);
+  virtual HyperGraphAction* operator()(const HyperGraph* graph, Parameters* parameters = 0);
 };
 
 /**
@@ -82,15 +81,13 @@ class G2O_CORE_API HyperGraphElementAction {
   //! on which it operates
   explicit HyperGraphElementAction(const std::string& typeName_ = "");
 
-  //! redefine this to do the action stuff. If successful, the action returns a
-  //! pointer to itself
-  virtual HyperGraphElementAction* operator()(
-      HyperGraph::HyperGraphElement* element, Parameters* parameters);
+  //! redefine this to do the action stuff. If successful, the action returns a pointer to itself
+  virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
+                                              Parameters* parameters);
 
-  //! redefine this to do the action stuff. If successful, the action returns a
-  //! pointer to itself
-  virtual HyperGraphElementAction* operator()(
-      const HyperGraph::HyperGraphElement* element, Parameters* parameters);
+  //! redefine this to do the action stuff. If successful, the action returns a pointer to itself
+  virtual HyperGraphElementAction* operator()(const HyperGraph::HyperGraphElement* element,
+                                              Parameters* parameters);
 
   virtual ~HyperGraphElementAction();
 
@@ -111,31 +108,26 @@ class G2O_CORE_API HyperGraphElementAction {
 /**
  * \brief collection of actions
  *
- * collection of actions calls contains homogeneous actions operating on
- * different types all collected actions have the same name and should have the
- * same functionality
+ * collection of actions calls contains homogeneous actions operating on different types
+ * all collected actions have the same name and should have the same functionality
  */
-class G2O_CORE_API HyperGraphElementActionCollection
-    : public HyperGraphElementAction {
+class G2O_CORE_API HyperGraphElementActionCollection : public HyperGraphElementAction {
  public:
   //! constructor. name_ is the name of the action e.g.draw).
   explicit HyperGraphElementActionCollection(const std::string& name_);
   /**
-   * calling functions, they return a pointer to the instance of action in
-   * actionMap that was active on element
+   * calling functions, they return a pointer to the instance of action in actionMap that was active
+   * on element
    */
-  virtual HyperGraphElementAction* operator()(
-      HyperGraph::HyperGraphElement* element, Parameters* parameters);
-  virtual HyperGraphElementAction* operator()(
-      const HyperGraph::HyperGraphElement* element, Parameters* parameters);
+  virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
+                                              Parameters* parameters);
+  virtual HyperGraphElementAction* operator()(const HyperGraph::HyperGraphElement* element,
+                                              Parameters* parameters);
   ActionMap& actionMap() { return _actionMap; }
-  //! inserts an action in the pool. The action should have the same name of the
-  //! container. returns false on failure (the container has a different name
-  //! than the action);
-  bool registerAction(
-      const HyperGraphElementAction::HyperGraphElementActionPtr& action);
-  bool unregisterAction(
-      const HyperGraphElementAction::HyperGraphElementActionPtr& action);
+  //! inserts an action in the pool. The action should have the same name of the container.
+  //! returns false on failure (the container has a different name than the action);
+  bool registerAction(const HyperGraphElementAction::HyperGraphElementActionPtr& action);
+  bool unregisterAction(const HyperGraphElementAction::HyperGraphElementActionPtr& action);
 
  protected:
   ActionMap _actionMap;
@@ -160,10 +152,8 @@ class G2O_CORE_API HyperGraphActionLibrary {
   // returns a pointer to a collection indexed by name
   HyperGraphElementAction* actionByName(const std::string& name);
   // registers a basic action in the pool. If necessary a container is created
-  bool registerAction(
-      const HyperGraphElementAction::HyperGraphElementActionPtr& action);
-  bool unregisterAction(
-      const HyperGraphElementAction::HyperGraphElementActionPtr& action);
+  bool registerAction(const HyperGraphElementAction::HyperGraphElementActionPtr& action);
+  bool unregisterAction(const HyperGraphElementAction::HyperGraphElementActionPtr& action);
 
   inline HyperGraphElementAction::ActionMap& actionMap() { return _actionMap; }
 
@@ -178,10 +168,9 @@ class G2O_CORE_API HyperGraphActionLibrary {
 /**
  * apply an action to all the elements of the graph.
  */
-void G2O_CORE_API
-applyAction(HyperGraph* graph, HyperGraphElementAction* action,
-            HyperGraphElementAction::Parameters* parameters = 0,
-            const std::string& typeName = "");
+void G2O_CORE_API applyAction(HyperGraph* graph, HyperGraphElementAction* action,
+                              HyperGraphElementAction::Parameters* parameters = 0,
+                              const std::string& typeName = "");
 
 /**
  * brief write into gnuplot
@@ -200,23 +189,20 @@ class G2O_CORE_API WriteGnuplotAction : public HyperGraphElementAction {
 
 class G2O_CORE_API DrawAction : public HyperGraphElementAction {
  public:
-  class G2O_CORE_API Parameters : public HyperGraphElementAction::Parameters,
-                                  public PropertyMap {
+  class G2O_CORE_API Parameters : public HyperGraphElementAction::Parameters, public PropertyMap {
    public:
     Parameters();
   };
   DrawAction(const std::string& typeName_);
 
  protected:
-  virtual bool refreshPropertyPtrs(
-      HyperGraphElementAction::Parameters* params_);
+  virtual bool refreshPropertyPtrs(HyperGraphElementAction::Parameters* params_);
   void initializeDrawActionsCache();
-  void drawCache(CacheContainer* caches,
-                 HyperGraphElementAction::Parameters* params_);
-  void drawUserData(HyperGraph::Data* data,
-                    HyperGraphElementAction::Parameters* params_);
+  void drawCache(CacheContainer* caches, HyperGraphElementAction::Parameters* params_);
+  void drawUserData(HyperGraph::Data* data, HyperGraphElementAction::Parameters* params_);
   Parameters* _previousParams;
   BoolProperty* _show;
+  BoolProperty* _showId;
   HyperGraphElementAction* _cacheDrawActions;
 };
 
@@ -225,8 +211,7 @@ class RegisterActionProxy {
  public:
   RegisterActionProxy() {
 #ifdef G2O_DEBUG_ACTIONLIB
-    std::cout << __FUNCTION__ << ": Registering action of type "
-              << typeid(T).name() << std::endl;
+    std::cout << __FUNCTION__ << ": Registering action of type " << typeid(T).name() << std::endl;
 #endif
     _action.reset(new T());
     HyperGraphActionLibrary::instance()->registerAction(_action);

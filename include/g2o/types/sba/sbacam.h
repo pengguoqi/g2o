@@ -49,11 +49,11 @@ class G2O_TYPES_SBA_API SBACam : public SE3Quat {
  public:
   // camera matrix and stereo baseline
   Matrix3 Kcam;
-  double baseline;
+  number_t baseline;
 
   // transformations
-  Eigen::Matrix<double, 3, 4> w2n;  // transform from world to node coordinates
-  Eigen::Matrix<double, 3, 4> w2i;  // transform from world to image coordinates
+  Eigen::Matrix<number_t, 3, 4> w2n;  // transform from world to node coordinates
+  Eigen::Matrix<number_t, 3, 4> w2i;  // transform from world to image coordinates
 
   // Derivatives of the rotation matrix transpose wrt quaternion xyz, used for
   // calculating Jacobian wrt pose of a projection.
@@ -72,14 +72,14 @@ class G2O_TYPES_SBA_API SBACam : public SE3Quat {
   void update(const Vector6& update);
 
   // transforms
-  static void transformW2F(Eigen::Matrix<double, 3, 4>& m, const Vector3& trans,
+  static void transformW2F(Eigen::Matrix<number_t, 3, 4>& m, const Vector3& trans,
                            const Quaternion& qrot);
 
-  static void transformF2W(Eigen::Matrix<double, 3, 4>& m, const Vector3& trans,
+  static void transformF2W(Eigen::Matrix<number_t, 3, 4>& m, const Vector3& trans,
                            const Quaternion& qrot);
 
   // set up camera matrix
-  void setKcam(double fx, double fy, double cx, double cy, double tx);
+  void setKcam(number_t fx, number_t fy, number_t cx, number_t cy, number_t tx);
 
   // set transform from world to cam coords
   void setTransform() { transformW2F(w2n, _t, _r); }
