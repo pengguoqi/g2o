@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.1)
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 project(g2o)
@@ -10,25 +10,31 @@ include(GNUInstallDirs)
 set(LIB_PREFIX g2o_)
 
 set(g2o_C_FLAGS)
-set(g2o_CXX_FLAGS)
+set(g2o_CXX_FLAGS "-fPIC")
 
-set(G2O_LIB_VERSION   "0.1.0" CACHE STRING "g2o library version")
-set(G2O_LIB_SOVERSION "0.1"   CACHE STRING "g2o library soversion")
-set(G2O_VERSION 1.0.0)
+# default built type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
 
-# manually check for top-level project if CMake is older than 3.21
-if(CMAKE_VERSION VERSION_LESS 3.21)
-  string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
-endif()
+# postfix, based on type
+set(CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "postfix applied to debug build of libraries")
+set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "postfix applied to release build of libraries")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_rd" CACHE STRING "postfix applied to release-with-debug-information libraries")
+set(CMAKE_MINSIZEREL_POSTFIX "_s" CACHE STRING "postfix applied to minimium-size-build libraries")
 
-if(PROJECT_IS_TOP_LEVEL)
-  # default built type
-  if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING
-            "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-            FORCE)
-  endif()
-endif()
+# work out the postfix; required where we use OUTPUT_NAME
+if(CMAKE_BUILD_TYPE MATCHES Release)
+  set(EXE_POSTFIX)
+elseif(CMAKE_BUILD_TYPE MATCHES Debug)
+  set(EXE_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  set(EXE_POSTFIX ${CMAKE_RELWITHDEBINFO_POSTFIX})
+elseif(CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+  set(EXE_POSTFIX ${CMAKE_MINSIZEREL_POSTFIX})
+endif(CMAKE_BUILD_TYPE MATCHES Release)
 
 # Allow the developer to select if Dynamic or Static libraries are built
 option (BUILD_SHARED_LIBS "Build Shared Libraries (preferred and required for the g2o plugin system)" ON)
@@ -36,6 +42,13 @@ set (G2O_LIB_TYPE STATIC)
 if (BUILD_SHARED_LIBS)
   set (G2O_LIB_TYPE SHARED)
 endif()
+
+# There seems to be an issue with MSVC8
+# see http://eigen.tuxfamily.org/bz/show_bug.cgi?id=83
+if(MSVC90)
+  add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
+  message(STATUS "Disabling memory alignment for MSVC8")
+endif(MSVC90)
 
 # On the Mac platform, configure the RPATH as per the INSTALL, to
 # avoid the problem of loading both the built and INSTALLed versions
@@ -48,11 +61,11 @@ if(APPLE)
 endif(APPLE)
 
 # Set the output directory for the build executables and libraries
-set(g2o_RUNTIME_OUTPUT_DIRECTORY ${g2o_BINARY_DIR}/bin CACHE PATH "Target for the binaries")
+set(g2o_RUNTIME_OUTPUT_DIRECTORY ${g2o_SOURCE_DIR}/bin CACHE PATH "Target for the binaries")
 if(WIN32)
-  set(g2o_LIBRARY_OUTPUT_DIRECTORY ${g2o_BINARY_DIR}/bin CACHE PATH "Target for the libraries")
+  set(g2o_LIBRARY_OUTPUT_DIRECTORY ${g2o_SOURCE_DIR}/bin CACHE PATH "Target for the libraries")
 else(WIN32)
-  set(g2o_LIBRARY_OUTPUT_DIRECTORY ${g2o_BINARY_DIR}/lib CACHE PATH "Target for the libraries")
+  set(g2o_LIBRARY_OUTPUT_DIRECTORY ${g2o_SOURCE_DIR}/lib CACHE PATH "Target for the libraries")
 endif(WIN32)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
@@ -93,8 +106,10 @@ endif()
 
 # For building the CHOLMOD based solvers
 option(G2O_USE_CHOLMOD "Build g2o with CHOLMOD support" ON)
-find_package(SuiteSparse)
-if (G2O_USE_CHOLMOD AND SuiteSparse_CHOLMOD_FOUND)
+find_package(Cholmod)
+find_package(BLAS)
+find_package(LAPACK)
+if (G2O_USE_CHOLMOD AND CHOLMOD_FOUND AND BLAS_FOUND AND LAPACK_FOUND)
   message(STATUS "Enable support for Cholmod")
   set(CHOLMOD_FOUND TRUE)
 else()
@@ -102,42 +117,27 @@ else()
   set(CHOLMOD_FOUND FALSE)
 endif()
 
-# Options to control the LGPL libraries
-option(G2O_USE_LGPL_LIBS "Build libraries which use LGPL code" TRUE)
-
-# If the LGPL libraries are used, check if static or shared libraries are used and
-# show a suitable message
-if (G2O_USE_LGPL_LIBS)
-  if (G2O_LIB_TYPE STREQUAL "STATIC")
-    message(STATUS "Building LGPL code as a static library (affects license of the binary)")
-  else()
-    message(STATUS "Building LGPL code as a shared library")
-  endif()
-endif()
-
-# Adapter for the legacy LGPL flags. Note there is an inconsistency with the old implementation.
-if (BUILD_LGPL_SHARED_LIBS)
-  if (G2O_LIB_TYPE STREQUAL "SHARED")
-    set(G2O_USE_LGPL_LIBS TRUE)
-  else()
-    message(FATAL_ERROR "BUILD_LGPL_SHARED_LIBS is set to true but G2O_LIB_TYPE is set to STATIC")
-  endif()
-endif()
-
-# For building the CSparse based solvers. Note this depends on an LGPL library.
+# For building the CSparse based solvers
 option(G2O_USE_CSPARSE "Build g2o with CSParse support" ON)
 find_package(CSparse)
-if (${G2O_USE_CSPARSE} AND ${CSPARSE_FOUND} AND ${G2O_USE_LGPL_LIBS})
+if (G2O_USE_CSPARSE AND CSPARSE_FOUND)
   message(STATUS "Enable support for CSparse")
 else()
   message(STATUS "Disable support for CSparse")
-  set(G2O_USE_CSPARSE FALSE)
+  set(CSPARSE_FOUND FALSE)
 endif()
 
+option(BUILD_LGPL_SHARED_LIBS "Build LGPL Code as Shared Libraries (LGPL Code)" ON)
+set (G2O_LGPL_LIB_TYPE STATIC)
+if (BUILD_LGPL_SHARED_LIBS)
+  set (G2O_LGPL_LIB_TYPE SHARED)
+else()
+  message(STATUS "Building LGPL code as static library (affects license of the binary)")
+endif()
 
 # Eigen library parallelise itself, though, presumably due to performance issues
 # OPENMP is experimental. We experienced some slowdown with it
-option(G2O_USE_OPENMP "Build g2o with OpenMP support (EXPERIMENTAL)" OFF)
+set(G2O_USE_OPENMP OFF CACHE BOOL "Build g2o with OpenMP support (EXPERIMENTAL)")
 if(G2O_USE_OPENMP)
   find_package(OpenMP)
   if(OPENMP_FOUND)
@@ -154,8 +154,7 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL)
 
 # If OpenGL was found, use the import target if available. If not, use old-style includes
-option(G2O_USE_OPENGL "Build g2o with OpenGL support for visualization" ON)
-set(G2O_HAVE_OPENGL 0)
+set(G2O_USE_OPENGL ON CACHE BOOL "Build g2o with OpenGL support for visualization")
 if (OPENGL_FOUND AND G2O_USE_OPENGL)
   if (TARGET OpenGL::GL)
     set(G2O_OPENGL_TARGET "OpenGL::GL;OpenGL::GLU")
@@ -163,7 +162,7 @@ if (OPENGL_FOUND AND G2O_USE_OPENGL)
     set(G2O_OPENGL_TARGET "${OPENGL_LIBRARIES}")
     include_directories(${OPENGL_INCLUDE_DIR})
   endif()
-  set(G2O_HAVE_OPENGL 1)
+  set (G2O_HAVE_OPENGL 1)
   message(STATUS "Compiling with OpenGL support")
   #message(WARNING G2O_OPENGL_TARGET=${G2O_OPENGL_TARGET})
 endif()
@@ -171,25 +170,14 @@ endif()
 # For building the GUI
 find_package(QGLViewer)
 
-# Logging library
-option(G2O_USE_LOGGING "Try to use spdlog for logging" ON)
-set(G2O_HAVE_LOGGING 0)
-if (G2O_USE_LOGGING)
-  find_package(spdlog 1.6 QUIET)
-  if (TARGET spdlog::spdlog OR TARGET spdlog::spdlog_header_only)
-    set(G2O_HAVE_LOGGING 1)
-    message(STATUS "Compiling with logging support")
-  endif()
-endif()
-
 # Handle building the built in types. There is a fair degree of
 # granularity and dependency in the types supported.
 
 # 2D types
-option(G2O_BUILD_SLAM2D_TYPES "Build SLAM2D types" ON)
-option(G2O_BUILD_SLAM2D_ADDON_TYPES "Build SLAM2D addon types" ON)
-option(G2O_BUILD_DATA_TYPES "Build SLAM2D data types" ON)
-option(G2O_BUILD_SCLAM2D_TYPES "Build SCLAM2D types" ON)
+set(G2O_BUILD_SLAM2D_TYPES ON CACHE BOOL "Build SLAM2D types")
+set(G2O_BUILD_SLAM2D_ADDON_TYPES ON CACHE BOOL "Build SLAM2D addon types")
+set(G2O_BUILD_DATA_TYPES ON CACHE BOOL "Build SLAM2D data types")
+set(G2O_BUILD_SCLAM2D_TYPES ON CACHE BOOL "Build SCLAM2D types")
 
 # Process the arguments. If G2O_BUILD_SLAM2D_TYPES is disabled, forceably
 # disable all types. Otherwise, update messages on the types enabled.
@@ -212,11 +200,11 @@ else()
 endif()
 
 # 3D types
-option(G2O_BUILD_SLAM3D_TYPES "Build SLAM 3D types" ON)
-option(G2O_BUILD_SLAM3D_ADDON_TYPES "Build SLAM 3D addon types" ON)
-option(G2O_BUILD_SBA_TYPES "Build SLAM3D SBA types" ON)
-option(G2O_BUILD_ICP_TYPES "Build SLAM3D ICP types" ON)
-option(G2O_BUILD_SIM3_TYPES "Build SLAM3D sim3 types" ON)
+set(G2O_BUILD_SLAM3D_TYPES ON CACHE BOOL "Build SLAM 3D types")
+set(G2O_BUILD_SLAM3D_ADDON_TYPES ON CACHE BOOL "Build SLAM 3D addon types")
+set(G2O_BUILD_SBA_TYPES ON CACHE BOOL "Build SLAM3D SBA types")
+set(G2O_BUILD_ICP_TYPES ON CACHE BOOL "Build SLAM3D ICP types")
+set(G2O_BUILD_SIM3_TYPES ON CACHE BOOL "Build SLAM3D sim3 types")
 
 # Process the arguments. If G2O_BUILD_SLAM3D_TYPES is disabled, forceably
 # disable all the types. Enable SBA if it's not enabled but one of it's
@@ -260,7 +248,7 @@ else()
 endif()
 
 # shall we build the core apps using the library
-option(G2O_BUILD_APPS "Build g2o apps" ON)
+set(G2O_BUILD_APPS OFF CACHE BOOL "Build g2o apps")
 if(G2O_BUILD_APPS)
   message(STATUS "Compiling g2o apps")
 endif(G2O_BUILD_APPS)
@@ -270,7 +258,7 @@ CMAKE_DEPENDENT_OPTION(G2O_BUILD_LINKED_APPS "Build apps linked with the librari
   "G2O_BUILD_APPS" OFF)
 
 # shall we build the examples
-option(G2O_BUILD_EXAMPLES "Build g2o examples" ON)
+set(G2O_BUILD_EXAMPLES OFF CACHE BOOL "Build g2o examples")
 if(G2O_BUILD_EXAMPLES)
   message(STATUS "Compiling g2o examples")
 endif(G2O_BUILD_EXAMPLES)
@@ -299,7 +287,7 @@ macro(DEFINE_SSE_VAR  _setname)
 		endif()
 	else (DO_SSE_AUTODETECT)
 		# Manual:
-		option("DISABLE_${_setname}" "Forces compilation WITHOUT ${_setname} extensions" OFF)
+		set("DISABLE_${_setname}" OFF CACHE BOOL "Forces compilation WITHOUT ${_setname} extensions")
 		mark_as_advanced("DISABLE_${_setname}")
 		set(CMAKE_G2O_HAS_${_setname} 0)
 		if (NOT DISABLE_${_setname})
@@ -317,37 +305,32 @@ DEFINE_SSE_VAR(SSE4_A)
 
 include(CheckCXXCompilerFlag)
 
-macro(CHECK_AND_ADD_COMPILE_OPTION _option _option_name)
-  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    check_cxx_compiler_flag("-Werror=unused-command-line-argument ${_option}" ${_option_name}_AVAILABLE)
-  else()
-    check_cxx_compiler_flag(${_option} ${_option_name}_AVAILABLE)
-  endif()
-  if(${_option_name}_AVAILABLE)
+macro(CHECK_AND_ADD_COMPILE_OPTION _option)
+check_cxx_compiler_flag(${_option} OPTION_AVAILABLE)
+  IF(${OPTION_AVAILABLE})
     add_compile_options(${_option})
-  endif()
-endmacro()
+  ENDIF(${OPTION_AVAILABLE})
+endmacro(CHECK_AND_ADD_COMPILE_OPTION)
 
 # Add build flags for clang AND GCC
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
   # SSE2?
   if (CMAKE_G2O_HAS_SSE2)
-    CHECK_AND_ADD_COMPILE_OPTION(-msse2 SSE2)
+    CHECK_AND_ADD_COMPILE_OPTION(-msse2)
   endif()
   # SSE3?
   if (CMAKE_G2O_HAS_SSE3)
-    CHECK_AND_ADD_COMPILE_OPTION(-msse3 SSE3)
-    CHECK_AND_ADD_COMPILE_OPTION(-mssse3 SSSE3)
+    CHECK_AND_ADD_COMPILE_OPTION(-msse3 -mssse3)
   endif()
   # SSE4*?
   if (CMAKE_G2O_HAS_SSE4_1)
-    CHECK_AND_ADD_COMPILE_OPTION(-msse4.1 SSE41)
+    CHECK_AND_ADD_COMPILE_OPTION(-msse4.1)
   endif()
   if (CMAKE_G2O_HAS_SSE4_2)
-    CHECK_AND_ADD_COMPILE_OPTION(-msse4.2 SSE42)
+    CHECK_AND_ADD_COMPILE_OPTION(-msse4.2)
   endif()
   if (CMAKE_G2O_HAS_SSE4_A)
-    CHECK_AND_ADD_COMPILE_OPTION(-msse4a SSE4a)
+    CHECK_AND_ADD_COMPILE_OPTION(-msse4a)
   endif()
 endif()
 # End of of SSE* autodetect code -------
@@ -361,8 +344,8 @@ if(BUILD_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Compiler specific options for gcc
-option (BUILD_WITH_MARCH_NATIVE "Build with \"-march native\"" OFF)
 if(CMAKE_COMPILER_IS_GNUCXX)
+  option (BUILD_WITH_MARCH_NATIVE "Build with \"-march native\"" OFF)
   message(STATUS "Compiling with GCC")
 
   # Generic settings for optimisation
@@ -395,11 +378,6 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   message(STATUS "Compiling with Clang")
 
-  # Linux
-  if(BUILD_WITH_MARCH_NATIVE AND NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm" AND "${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
-  endif()
   # OS X
   if(BUILD_WITH_MARCH_NATIVE AND "${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
@@ -457,7 +435,7 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)  # Avoid deprecated fprintf(), etc.
   add_definitions("/nologo")
   # TODO not sure this should be a thing
-  add_definitions("/wd4244") # Conversion from double -> int
+  add_definitions("/wd4244") # Conversion from number_t -> int
   add_definitions("/wd4267") # Conversion during return
   add_definitions("/wd4522") # Duplicated operator=() in Eigen headers
 
@@ -469,6 +447,10 @@ if(MSVC)
   endif()
 
 endif(MSVC)
+
+# C++14 support
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # specifying compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${g2o_CXX_FLAGS}")
@@ -484,10 +466,13 @@ else()
   include_directories(${EIGEN3_INCLUDE_DIR})
 endif ()
 
+# Set up the top-level include directories
+include_directories(${g2o_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+
 # Generate config.h
 set(G2O_OPENGL_FOUND ${OPENGL_FOUND})
 set(G2O_HAVE_CHOLMOD ${CHOLMOD_FOUND})
-set(G2O_HAVE_CSPARSE ${G2O_USE_CSPARSE})
+set(G2O_HAVE_CSPARSE ${CSPARSE_FOUND})
 set(G2O_SHARED_LIBS ${BUILD_SHARED_LIBS})
 set(G2O_LGPL_SHARED_LIBS ${BUILD_LGPL_SHARED_LIBS})
 set(G2O_CXX_COMPILER "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER}")
@@ -500,6 +485,7 @@ set(G2O_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
 set(G2O_CONFIG_INSTALL_DIR "lib/cmake/${PROJECT_NAME}")
 set(G2O_NAMESPACE "${PROJECT_NAME}::")
 set(G2O_SRC_DIR "${PROJECT_SOURCE_DIR}")
+set(G2O_VERSION 1.0.0)
 
 include(CMakePackageConfigHelpers)
 WRITE_BASIC_PACKAGE_VERSION_FILE(
@@ -528,9 +514,6 @@ if(BUILD_UNITTESTS)
   add_subdirectory(unit_test)
 endif()
 
-# Include the subdirectories
-add_subdirectory(g2o)
-
 # Benchmarks
 option(G2O_BUILD_BENCHMARKS "build benchmarks" OFF)
 if(G2O_BUILD_BENCHMARKS)
@@ -538,6 +521,9 @@ if(G2O_BUILD_BENCHMARKS)
   if(${benchmark_FOUND})
     add_subdirectory(benchmarks)
   else()
-    message(WARNING "G2O_BUILD_BENCHMARKS was set to true, but the benchmark library cannot be found")
+    message(WARNING G2O_BUILD_BENCHMARKS was set to true, but the benchmark library cannot be found)
   endif()
 endif()
+
+# Include the subdirectories
+add_subdirectory(g2o)

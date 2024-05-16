@@ -26,10 +26,15 @@
 
 #include "edge_line2d.h"
 
-namespace g2o {
+#ifdef G2O_HAVE_OPENGL
+#include "g2o/stuff/opengl_primitives.h"
+#include "g2o/stuff/opengl_wrapper.h"
+#endif
 
-EdgeLine2D::EdgeLine2D()
-    : BaseBinaryEdge<2, Line2D, VertexLine2D, VertexLine2D>() {
+using namespace g2o;
+using namespace Eigen;
+
+EdgeLine2D::EdgeLine2D() : BaseBinaryEdge<2, Line2D, VertexLine2D, VertexLine2D>() {
   _information.setIdentity();
   _error.setZero();
 }
@@ -50,5 +55,3 @@ void EdgeLine2D::linearizeOplus() {
   _jacobianOplusXj = Matrix2::Identity();
 }
 #endif
-
-}  // namespace g2o

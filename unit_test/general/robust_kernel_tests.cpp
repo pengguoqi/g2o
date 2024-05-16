@@ -66,8 +66,8 @@ TEST(General, RobustKernelFactory) {
 }
 
 /**
- * Type parameterized class for a fixture to setup a linear solver along with
- * some data of a linear system to be solved.
+ * Type parameterized class for a fixture to setup a linear solver along with some data of a linear
+ * system to be solved.
  */
 template <typename T>
 class RobustKernelTests : public Test {
@@ -75,10 +75,7 @@ class RobustKernelTests : public Test {
   using Kernel = T;
 
   RobustKernelTests() : Test() {
-    kernel_.setDelta(0.07);
-
-    error_values_.reserve(3);
-    error_values_.push_back(0.99 * kernel_.delta() * kernel_.delta());
+    error_values_.push_back(0.5 * kernel_.delta());
     error_values_.push_back(0.99 * kernel_.delta());
     error_values_.push_back(1.5 * kernel_.delta());
   }
@@ -87,43 +84,28 @@ class RobustKernelTests : public Test {
   Kernel kernel_;
   std::vector<double> error_values_;
 
-  //! Evaluate the robust kernel function
-  double eval(double val) const {
-    g2o::Vector3 result;
-    kernel_.robustify(val, result);
-    return result[0];
-  }
-
   /**
    * Estimate the first order derivative numerically
    */
-  double estimateDerivative(double x) {
-    constexpr double delta = g2o::cst(1e-9);
+  number_t estimateDerivative(number_t x) {
+    constexpr number_t delta = g2o::cst(1e-9);
 
-    double result = (1 / (2 * delta)) * (eval(x + delta) - eval(x - delta));
+    g2o::Vector3 first;
+    g2o::Vector3 second;
+    this->kernel_.robustify(x + delta, first);
+    this->kernel_.robustify(x - delta, second);
+
+    number_t result = (1 / (2 * delta)) * (first(0) - second(0));
     return result;
   }
-
-  double estimate2ndDerivative(double x) {
-    constexpr double kEps = 1e-5;
-
-    const double result1 =
-        (1. / (kEps * kEps)) * (2. * eval(x) - 5. * eval(x - kEps) +
-                                4 * eval(x - 2. * kEps) - eval(x - 3 * kEps));
-    const double result2 =
-        (1. / (kEps * kEps)) * (2. * eval(x) - 5. * eval(x + kEps) +
-                                4 * eval(x + 2. * kEps) - eval(x + 3 * kEps));
-    return 0.5 * result1 + 0.5 * result2;
-  }
 };
-
 TYPED_TEST_SUITE_P(RobustKernelTests);
 
 TYPED_TEST_P(RobustKernelTests, Values) {
   for (auto e : this->error_values_) {
     g2o::Vector3 val = g2o::Vector3::Zero();
     this->kernel_.robustify(e, val);
-    EXPECT_THAT(val(0), Ne(0.));
+    ASSERT_THAT(val(0), Not(Eq(0.)));
   }
 }
 
@@ -131,22 +113,13 @@ TYPED_TEST_P(RobustKernelTests, Derivative) {
   for (auto e : this->error_values_) {
     g2o::Vector3 val = g2o::Vector3::Zero();
     this->kernel_.robustify(e, val);
-    double estimatedJac = this->estimateDerivative(e);
-    EXPECT_THAT(val(1), DoubleNear(estimatedJac, 1e-5));
-  }
-}
-
-TYPED_TEST_P(RobustKernelTests, SecondDerivative) {
-  for (auto e : this->error_values_) {
-    g2o::Vector3 val = g2o::Vector3::Zero();
-    this->kernel_.robustify(e, val);
-    double estimated2ndDerivative = this->estimate2ndDerivative(e);
-    EXPECT_THAT(val(2), DoubleNear(estimated2ndDerivative, 1e-3));
+    number_t estimatedJac = this->estimateDerivative(e);
+    ASSERT_THAT(val(1), DoubleNear(estimatedJac, 1e-5));
   }
 }
 
 // clang-format off
-REGISTER_TYPED_TEST_SUITE_P(RobustKernelTests, Values, Derivative, SecondDerivative);
+REGISTER_TYPED_TEST_SUITE_P(RobustKernelTests, Values, Derivative);
 using RobustKernelTypes = ::testing::Types<
   g2o::RobustKernelHuber,
   g2o::RobustKernelPseudoHuber,

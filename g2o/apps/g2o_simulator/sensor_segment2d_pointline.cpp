@@ -26,8 +26,6 @@
 
 #include "sensor_segment2d_pointline.h"
 
-#include <cassert>
-
 #include "g2o/apps/g2o_simulator/simutils.h"
 using namespace std;
 using namespace Eigen;
@@ -35,9 +33,7 @@ using namespace Eigen;
 namespace g2o {
 
 SensorSegment2DPointLine::SensorSegment2DPointLine(const std::string& name_)
-    : BinarySensor<Robot2D, EdgeSE2Segment2DPointLine, WorldObjectSegment2D>(
-          name_),
-      _visiblePoint(0) {}
+    : BinarySensor<Robot2D, EdgeSE2Segment2DPointLine, WorldObjectSegment2D>(name_), _visiblePoint(0) {}
 
 void SensorSegment2DPointLine::addNoise(EdgeType* e) {
   EdgeType::ErrorVector n = _sampler.generateSample();
@@ -45,8 +41,7 @@ void SensorSegment2DPointLine::addNoise(EdgeType* e) {
   e->setInformation(information());
 }
 
-bool SensorSegment2DPointLine::isVisible(
-    SensorSegment2DPointLine::WorldObjectType* to) {
+bool SensorSegment2DPointLine::isVisible(SensorSegment2DPointLine::WorldObjectType* to) {
   if (!_robotPoseObject) return false;
 
   assert(to && to->vertex());
@@ -117,8 +112,7 @@ void SensorSegment2DPointLine::sense() {
     ++it;
     count++;
   }
-  for (std::set<BaseWorldObject*>::iterator it = world()->objects().begin();
-       it != world()->objects().end(); ++it) {
+  for (std::set<BaseWorldObject*>::iterator it = world()->objects().begin(); it != world()->objects().end(); ++it) {
     WorldObjectType* o = dynamic_cast<WorldObjectType*>(*it);
     if (o && isVisible(o)) {
       EdgeType* e = mkEdge(o);

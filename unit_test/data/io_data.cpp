@@ -35,7 +35,9 @@ using namespace std;
 using namespace g2o;
 using namespace testing;
 
-MATCHER(NearEq, "") { return fabs(std::get<0>(arg) - std::get<1>(arg)) < 0.01; }
+MATCHER(NearEq, "") {
+  return fabs(std::get<0>(arg) - std::get<1>(arg)) < 0.01;
+}
 
 MATCHER(PointsNearEq, "") {
   return (std::get<0>(arg) - std::get<1>(arg)).norm() < 0.01;
@@ -44,10 +46,10 @@ MATCHER(PointsNearEq, "") {
 TEST(Data, ReadWriteRobotLaser) {
   constexpr int kNumBeams = 180;
 
-  vector<double> ranges;
-  vector<double> remissions;
+  vector<number_t> ranges;
+  vector<number_t> remissions ;
   for (int i = 0; i < kNumBeams; ++i) {
-    ranges.push_back(i * 0.1);
+    ranges.push_back(i*0.1);
     remissions.push_back(sampleUniform(0., 1.));
   }
 
@@ -67,14 +69,10 @@ TEST(Data, ReadWriteRobotLaser) {
 
   ASSERT_THAT(recoveredLaser.ranges(), SizeIs(laser.ranges().size()));
   ASSERT_THAT(recoveredLaser.remissions(), SizeIs(laser.remissions().size()));
-  ASSERT_TRUE(recoveredLaser.odomPose().toVector().isApprox(
-      laser.odomPose().toVector()));
-  ASSERT_TRUE(recoveredLaser.laserPose().toVector().isApprox(
-      laser.laserPose().toVector()));
+  ASSERT_TRUE(recoveredLaser.odomPose().toVector().isApprox(laser.odomPose().toVector()));
+  ASSERT_TRUE(recoveredLaser.laserPose().toVector().isApprox(laser.laserPose().toVector()));
 
   ASSERT_THAT(recoveredLaser.ranges(), Pointwise(NearEq(), laser.ranges()));
-  ASSERT_THAT(recoveredLaser.remissions(),
-              Pointwise(NearEq(), laser.remissions()));
-  ASSERT_THAT(recoveredLaser.cartesian(),
-              Pointwise(PointsNearEq(), laser.cartesian()));
+  ASSERT_THAT(recoveredLaser.remissions(), Pointwise(NearEq(), laser.remissions()));
+  ASSERT_THAT(recoveredLaser.cartesian(), Pointwise(PointsNearEq(), laser.cartesian()));
 }

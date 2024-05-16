@@ -26,14 +26,11 @@
 
 #include "sensor_line3d.h"
 
-#include <cassert>
-
 namespace g2o {
 using namespace std;
 
 // SensorLine3D
-SensorLine3D::SensorLine3D(const std::string& name_)
-    : BinarySensor<Robot3D, EdgeSE3Line3D, WorldObjectLine3D>(name_) {
+SensorLine3D::SensorLine3D(const std::string& name_) : BinarySensor<Robot3D, EdgeSE3Line3D, WorldObjectLine3D>(name_) {
   _offsetParam = 0;
   _information.setIdentity();
   _information *= 1e9;
@@ -85,8 +82,7 @@ void SensorLine3D::sense() {
   }
   if (!_robotPoseObject) return;
   _sensorPose = _robotPoseObject->vertex()->estimate() * _offsetParam->offset();
-  for (std::set<BaseWorldObject*>::iterator it = world()->objects().begin();
-       it != world()->objects().end(); ++it) {
+  for (std::set<BaseWorldObject*>::iterator it = world()->objects().begin(); it != world()->objects().end(); ++it) {
     WorldObjectType* o = dynamic_cast<WorldObjectType*>(*it);
     if (o && isVisible(o)) {
       EdgeType* e = mkEdge(o);

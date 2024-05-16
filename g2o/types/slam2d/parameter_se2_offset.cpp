@@ -51,13 +51,11 @@ bool ParameterSE2Offset::read(std::istream& is) {
   return state;
 }
 
-bool ParameterSE2Offset::write(std::ostream& os) const {
-  return internal::writeVector(os, offset().toVector());
-}
+bool ParameterSE2Offset::write(std::ostream& os) const { return internal::writeVector(os, offset().toVector()); }
 
 CacheSE2Offset::CacheSE2Offset() : Cache(), _offsetParam(0) {}
 
-bool CacheSE2Offset::resolveDependencies() {
+bool CacheSE2Offset::resolveDependancies() {
   _offsetParam = dynamic_cast<ParameterSE2Offset*>(_parameters[0]);
   return _offsetParam != 0;
 }
@@ -77,18 +75,14 @@ void CacheSE2Offset::updateImpl() {
   _w2l = w2l.rotation().toRotationMatrix();
   _w2l.translation() = w2l.translation();
 
-  double alpha = v->estimate().rotation().angle();
-  double c = std::cos(alpha), s = std::sin(alpha);
+  number_t alpha = v->estimate().rotation().angle();
+  number_t c = std::cos(alpha), s = std::sin(alpha);
   Matrix2 RInversePrime;
   RInversePrime << -s, c, -c, -s;
-  _RpInverse_RInversePrime =
-      _offsetParam->offset().rotation().toRotationMatrix().transpose() *
-      RInversePrime;
+  _RpInverse_RInversePrime = _offsetParam->offset().rotation().toRotationMatrix().transpose() * RInversePrime;
   _RpInverse_RInverse = w2l.rotation();
 }
 
-void CacheSE2Offset::setOffsetParam(ParameterSE2Offset* offsetParam) {
-  _offsetParam = offsetParam;
-}
+void CacheSE2Offset::setOffsetParam(ParameterSE2Offset* offsetParam) { _offsetParam = offsetParam; }
 
 }  // namespace g2o

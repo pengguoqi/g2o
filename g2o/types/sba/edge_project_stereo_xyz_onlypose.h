@@ -35,16 +35,15 @@ namespace g2o {
 
 // Edge to optimize only the camera pose stereo
 // TODO why does this exist? Fix point in optimization instead?
-class G2O_TYPES_SBA_API EdgeStereoSE3ProjectXYZOnlyPose
-    : public BaseUnaryEdge<3, Vector3, VertexSE3Expmap> {
+class G2O_TYPES_SBA_API EdgeStereoSE3ProjectXYZOnlyPose : public BaseUnaryEdge<3, Vector3, VertexSE3Expmap> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   EdgeStereoSE3ProjectXYZOnlyPose() {}
 
-  bool read(std::istream& is);
+  bool read(std::istream &is);
 
-  bool write(std::ostream& os) const;
+  bool write(std::ostream &os) const;
 
   void computeError();
 
@@ -52,10 +51,10 @@ class G2O_TYPES_SBA_API EdgeStereoSE3ProjectXYZOnlyPose
 
   virtual void linearizeOplus();
 
-  Vector3 cam_project(const Vector3& trans_xyz) const;
+  Vector3 cam_project(const Vector3 &trans_xyz) const;
 
   Vector3 Xw;
-  double fx, fy, cx, cy, bf;
+  number_t fx, fy, cx, cy, bf;
 };
 
 }  // namespace g2o

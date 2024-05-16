@@ -28,20 +28,27 @@
 
 namespace g2o {
 
-EdgeSE2XYPrior::EdgeSE2XYPrior()
-    : BaseUnaryEdge<2, Vector2, g2o::VertexSE2>() {}
+  EdgeSE2XYPrior::EdgeSE2XYPrior() : BaseUnaryEdge< 2, Vector2, g2o::VertexSE2 >()
+  {
 
-bool EdgeSE2XYPrior::read(std::istream& is) {
-  internal::readVector(is, _measurement);
-  readInformationMatrix(is);
-  return true;
-}
+  }
 
-bool EdgeSE2XYPrior::write(std::ostream& os) const {
-  internal::writeVector(os, measurement());
-  return writeInformationMatrix(os);
-}
+  bool EdgeSE2XYPrior::read(std::istream& is)
+  {
+    internal::readVector(is, _measurement);
+    readInformationMatrix(is);
+    return true;
+  }
 
-void EdgeSE2XYPrior::linearizeOplus() { _jacobianOplusXi << 1, 0, 0, 0, 1, 0; }
+  bool EdgeSE2XYPrior::write(std::ostream& os) const
+  {
+    internal::writeVector(os, measurement());
+    return writeInformationMatrix(os);
+  }
 
-}  // namespace g2o
+  void EdgeSE2XYPrior::linearizeOplus()
+  {
+    _jacobianOplusXi << 1,0,0, 0,1,0;
+  }
+
+} // end namespace

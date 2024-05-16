@@ -31,18 +31,10 @@ add_library(types_sba ${G2O_LIB_TYPE}
 )
 
 set_target_properties(types_sba PROPERTIES OUTPUT_NAME ${LIB_PREFIX}types_sba)
-set_target_properties(types_sba PROPERTIES
-  VERSION ${G2O_LIB_VERSION}
-  SOVERSION ${G2O_LIB_SOVERSION})
 if (APPLE)
   set_target_properties(types_sba PROPERTIES INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 endif()
-target_compile_features(types_sba PUBLIC cxx_std_17)
 target_link_libraries(types_sba core types_slam3d)
-
-target_include_directories(types_sba PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include/g2o/types/sba>)
 
 install(TARGETS types_sba
   EXPORT ${G2O_TARGETS_EXPORT_NAME}

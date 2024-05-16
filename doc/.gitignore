@@ -3,7 +3,5 @@
 *.blg
 *.dvi
 *.log
-*.pdf
-pics/*.pdf
 doxygen/html
 doxygen/YES

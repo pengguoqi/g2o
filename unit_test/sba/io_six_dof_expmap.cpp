@@ -44,28 +44,20 @@ TEST(IoSixDofExpmap, ReadWriteVertexSE3Expmap) {
 /*
  * EDGE Tests
  */
-TEST(IoSixDofExpmap, ReadWriteEdgeSE3Expmap) {
-  readWriteVectorBasedEdge<EdgeSE3Expmap, internal::RandomSE3Quat>();
-}
+TEST(IoSixDofExpmap, ReadWriteEdgeSE3Expmap) { readWriteVectorBasedEdge<EdgeSE3Expmap, internal::RandomSE3Quat>(); }
 
-TEST(IoSixDofExpmap, ReadWriteEdgeSE3ProjectXYZ) {
-  readWriteVectorBasedEdge<EdgeSE3ProjectXYZ>();
-}
+TEST(IoSixDofExpmap, ReadWriteEdgeSE3ProjectXYZ) { readWriteVectorBasedEdge<EdgeSE3ProjectXYZ>(); }
 
-TEST(IoSixDofExpmap, ReadWriteEdgeStereoSE3ProjectXYZ) {
-  readWriteVectorBasedEdge<EdgeStereoSE3ProjectXYZ>();
-}
+TEST(IoSixDofExpmap, ReadWriteEdgeStereoSE3ProjectXYZ) { readWriteVectorBasedEdge<EdgeStereoSE3ProjectXYZ>(); }
 
-TEST(IoSixDofExpmap, ReadWriteEdgeSE3ProjectXYZOnlyPose) {
-  readWriteVectorBasedEdge<EdgeSE3ProjectXYZOnlyPose>();
-}
+TEST(IoSixDofExpmap, ReadWriteEdgeSE3ProjectXYZOnlyPose) { readWriteVectorBasedEdge<EdgeSE3ProjectXYZOnlyPose>(); }
 
 TEST(IoSixDofExpmap, ReadWriteEdgeStereoSE3ProjectXYZOnlyPose) {
   readWriteVectorBasedEdge<EdgeStereoSE3ProjectXYZOnlyPose>();
 }
 
 /*
- * EDGE Tests including a Camera Parameter
+ * EDGE Tests inlcuding a Camera Parameter
  */
 class IoSixDofExpmapParam : public ::testing::Test {
  protected:

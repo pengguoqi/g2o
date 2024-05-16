@@ -29,11 +29,10 @@
 namespace g2o {
 
 // point to camera projection, stereo
-EdgeSBAScale::EdgeSBAScale()
-    : BaseBinaryEdge<1, double, VertexCam, VertexCam>() {}
+EdgeSBAScale::EdgeSBAScale() : BaseBinaryEdge<1, number_t, VertexCam, VertexCam>() {}
 
 bool EdgeSBAScale::read(std::istream& is) {
-  double meas;
+  number_t meas;
   is >> meas;
   setMeasurement(meas);
   information().setIdentity();
@@ -53,14 +52,14 @@ void EdgeSBAScale::initialEstimate(const OptimizableGraph::VertexSet& from_,
   // compute the translation vector of v1 w.r.t v2
   if (from_.count(v1) == 1) {
     SE3Quat delta = (v1->estimate().inverse() * v2->estimate());
-    double norm = delta.translation().norm();
-    double alpha = _measurement / norm;
+    number_t norm = delta.translation().norm();
+    number_t alpha = _measurement / norm;
     delta.setTranslation(delta.translation() * alpha);
     v2->setEstimate(v1->estimate() * delta);
   } else {
     SE3Quat delta = (v2->estimate().inverse() * v1->estimate());
-    double norm = delta.translation().norm();
-    double alpha = _measurement / norm;
+    number_t norm = delta.translation().norm();
+    number_t alpha = _measurement / norm;
     delta.setTranslation(delta.translation() * alpha);
     v1->setEstimate(v2->estimate() * delta);
   }

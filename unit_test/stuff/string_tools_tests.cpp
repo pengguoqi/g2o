@@ -24,13 +24,10 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
-#include <sstream>
-#include <string>
 
 #include "g2o/stuff/string_tools.h"
+#include "gtest/gtest.h"
 
 TEST(Stuff, Trim) {
   ASSERT_EQ("abc", g2o::trim("abc   "));
@@ -66,6 +63,14 @@ TEST(Stuff, StrToUpper) {
   ASSERT_EQ("ABC !!$", g2o::strToUpper("ABC !!$"));
 }
 
+TEST(Stuff, FormatString) {
+  ASSERT_EQ("42", g2o::formatString("%d", 42));
+  ASSERT_EQ("3.1415", g2o::formatString("%g", 3.1415));
+  ASSERT_EQ("3.141500", g2o::formatString("%f", 3.1415));
+  ASSERT_EQ("3.142", g2o::formatString("%.3f", 3.1415));
+  ASSERT_EQ("Hello 42 World", g2o::formatString("Hello %d World", 42));
+}
+
 TEST(Stuff, StrSplit) {
   std::vector<std::string> tokens;
   tokens = g2o::strSplit("", ",");
@@ -75,8 +80,7 @@ TEST(Stuff, StrSplit) {
   ASSERT_EQ("42", tokens[0]);
   tokens = g2o::strSplit("1,2;3:4", ";,:");
   ASSERT_EQ(4, tokens.size());
-  for (size_t i = 0; i < tokens.size(); ++i)
-    ASSERT_EQ(std::to_string(i + 1), tokens[i]);
+  for (size_t i = 0; i < tokens.size(); ++i) ASSERT_EQ(g2o::formatString("%d", int(i+1)), tokens[i]);
 }
 
 TEST(Stuff, StrStartsWith) {
@@ -93,33 +97,7 @@ TEST(Stuff, StrEndsWith) {
   ASSERT_FALSE(g2o::strEndsWith("Hello World!", "!!Hello World!"));
 }
 
-TEST(Stuff, ReadLine) {
-  std::stringstream content;
-  content << "foo" << std::endl;
-  content << "" << std::endl;
-  content << "bar" << std::endl;
-  content << "foo bar" << std::endl;
-
-  std::stringstream currentLine;
-  ASSERT_EQ(g2o::readLine(content, currentLine), 3);
-  ASSERT_EQ(currentLine.str(), "foo");
-  ASSERT_EQ(g2o::readLine(content, currentLine), 0);
-  ASSERT_EQ(currentLine.str(), "");
-  ASSERT_EQ(g2o::readLine(content, currentLine), 3);
-  ASSERT_EQ(currentLine.str(), "bar");
-  ASSERT_EQ(g2o::readLine(content, currentLine), 7);
-  ASSERT_EQ(currentLine.str(), "foo bar");
-  ASSERT_EQ(g2o::readLine(content, currentLine), -1);
-  ASSERT_EQ(g2o::readLine(content, currentLine), -1);
-
-  content = std::stringstream();
-  content << "foobar";
-  ASSERT_EQ(g2o::readLine(content, currentLine), 6);
-  ASSERT_EQ(currentLine.str(), "foobar");
-  ASSERT_EQ(g2o::readLine(content, currentLine), -1);
-}
-
-#if defined(UNIX) && !defined(ANDROID)
+#if defined (UNIX) && !defined(ANDROID)
 TEST(Stuff, StrExpand) {
   char* envVar = getenv("HOME");
   if (envVar == nullptr) {
@@ -127,8 +105,8 @@ TEST(Stuff, StrExpand) {
     SUCCEED();
     return;
   }
-  const std::string expanded = g2o::strExpandFilename("$HOME/filename.txt");
-  const std::string expected = std::string(envVar) + "/filename.txt";
+  std::string expanded = g2o::strExpandFilename("$HOME/filename.txt");
+  std::string expected = g2o::formatString("%s/filename.txt", envVar);
   EXPECT_EQ(expanded, expected);
 }
 #endif

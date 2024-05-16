@@ -31,42 +31,42 @@ namespace g2o {
 EdgeSE3ProjectXYZ::EdgeSE3ProjectXYZ()
     : BaseBinaryEdge<2, Vector2, VertexPointXYZ, VertexSE3Expmap>() {}
 
-bool EdgeSE3ProjectXYZ::read(std::istream& is) {
+bool EdgeSE3ProjectXYZ::read(std::istream &is) {
   internal::readVector(is, _measurement);
   return readInformationMatrix(is);
 }
 
-bool EdgeSE3ProjectXYZ::write(std::ostream& os) const {
+bool EdgeSE3ProjectXYZ::write(std::ostream &os) const {
   internal::writeVector(os, measurement());
   return writeInformationMatrix(os);
 }
 
 void EdgeSE3ProjectXYZ::computeError() {
-  const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[1]);
-  const VertexPointXYZ* v2 = static_cast<const VertexPointXYZ*>(_vertices[0]);
+  const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+  const VertexPointXYZ *v2 = static_cast<const VertexPointXYZ *>(_vertices[0]);
   Vector2 obs(_measurement);
   _error = obs - cam_project(v1->estimate().map(v2->estimate()));
 }
 
 bool EdgeSE3ProjectXYZ::isDepthPositive() {
-  const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[1]);
-  const VertexPointXYZ* v2 = static_cast<const VertexPointXYZ*>(_vertices[0]);
+  const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+  const VertexPointXYZ *v2 = static_cast<const VertexPointXYZ *>(_vertices[0]);
   return (v1->estimate().map(v2->estimate()))(2) > 0.0;
 }
 
 void EdgeSE3ProjectXYZ::linearizeOplus() {
-  VertexSE3Expmap* vj = static_cast<VertexSE3Expmap*>(_vertices[1]);
+  VertexSE3Expmap *vj = static_cast<VertexSE3Expmap *>(_vertices[1]);
   SE3Quat T(vj->estimate());
-  VertexPointXYZ* vi = static_cast<VertexPointXYZ*>(_vertices[0]);
+  VertexPointXYZ *vi = static_cast<VertexPointXYZ *>(_vertices[0]);
   Vector3 xyz = vi->estimate();
   Vector3 xyz_trans = T.map(xyz);
 
-  double x = xyz_trans[0];
-  double y = xyz_trans[1];
-  double z = xyz_trans[2];
-  double z_2 = z * z;
+  number_t x = xyz_trans[0];
+  number_t y = xyz_trans[1];
+  number_t z = xyz_trans[2];
+  number_t z_2 = z * z;
 
-  Eigen::Matrix<double, 2, 3> tmp;
+  Eigen::Matrix<number_t, 2, 3> tmp;
   tmp(0, 0) = fx;
   tmp(0, 1) = 0;
   tmp(0, 2) = -x / z * fx;
@@ -92,7 +92,7 @@ void EdgeSE3ProjectXYZ::linearizeOplus() {
   _jacobianOplusXj(1, 5) = y / z_2 * fy;
 }
 
-Vector2 EdgeSE3ProjectXYZ::cam_project(const Vector3& trans_xyz) const {
+Vector2 EdgeSE3ProjectXYZ::cam_project(const Vector3 &trans_xyz) const {
   Vector2 proj = project(trans_xyz);
   Vector2 res;
   res[0] = proj[0] * fx + cx;

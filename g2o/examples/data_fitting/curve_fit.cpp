@@ -33,7 +33,6 @@
 #include "g2o/core/optimization_algorithm_factory.h"
 #include "g2o/core/sparse_optimizer.h"
 #include "g2o/stuff/command_args.h"
-#include "g2o/stuff/logger.h"
 #include "g2o/stuff/sampler.h"
 
 using namespace std;
@@ -48,13 +47,13 @@ class VertexParams : public g2o::BaseVertex<3, Eigen::Vector3d> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   VertexParams() {}
 
-  bool read(std::istream& /*is*/) override { return false; }
+  virtual bool read(std::istream& /*is*/) { return false; }
 
-  bool write(std::ostream& /*os*/) const override { return false; }
+  virtual bool write(std::ostream& /*os*/) const { return false; }
 
-  void setToOriginImpl() override {}
+  virtual void setToOriginImpl() {}
 
-  void oplusImpl(const double* update) override {
+  virtual void oplusImpl(const double* update) {
     Eigen::Vector3d::ConstMapType v(update);
     _estimate += v;
   }
@@ -67,17 +66,16 @@ class VertexParams : public g2o::BaseVertex<3, Eigen::Vector3d> {
  * The error function computes the difference between the curve
  * and the point.
  */
-class EdgePointOnCurve
-    : public g2o::BaseUnaryEdge<1, Eigen::Vector2d, VertexParams> {
+class EdgePointOnCurve : public g2o::BaseUnaryEdge<1, Eigen::Vector2d, VertexParams> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   EdgePointOnCurve() {}
-  bool read(std::istream& /*is*/) override {
-    G2O_ERROR("not implemented yet");
+  virtual bool read(std::istream& /*is*/) {
+    cerr << __PRETTY_FUNCTION__ << " not implemented yet" << endl;
     return false;
   }
-  bool write(std::ostream& /*os*/) const override {
-    G2O_ERROR("not implemented yet");
+  virtual bool write(std::ostream& /*os*/) const {
+    cerr << __PRETTY_FUNCTION__ << " not implemented yet" << endl;
     return false;
   }
 
@@ -101,8 +99,7 @@ int main(int argc, char** argv) {
   string dumpFilename;
   g2o::CommandArgs arg;
   arg.param("dump", dumpFilename, "", "dump the points into a file");
-  arg.param("numPoints", numPoints, 50,
-            "number of points sampled from the curve");
+  arg.param("numPoints", numPoints, 50, "number of points sampled from the curve");
   arg.param("i", maxIterations, 10, "perform n iterations");
   arg.param("v", verbose, false, "verbose output of the optimization process");
 
@@ -135,15 +132,13 @@ int main(int argc, char** argv) {
   // allocate the solver
   g2o::OptimizationAlgorithmProperty solverProperty;
   optimizer.setAlgorithm(
-      g2o::OptimizationAlgorithmFactory::instance()->construct("lm_dense",
-                                                               solverProperty));
+      g2o::OptimizationAlgorithmFactory::instance()->construct("lm_dense", solverProperty));
 
   // build the optimization problem given the points
   // 1. add the parameter vertex
   VertexParams* params = new VertexParams();
   params->setId(0);
-  params->setEstimate(
-      Eigen::Vector3d(1, 1, 1));  // some initial value for the params
+  params->setEstimate(Eigen::Vector3d(1, 1, 1));  // some initial value for the params
   optimizer.addVertex(params);
   // 2. add the points we measured to be on the curve
   for (int i = 0; i < numPoints; ++i) {

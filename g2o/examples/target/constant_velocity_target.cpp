@@ -61,8 +61,8 @@ int main() {
   typedef BlockSolver<BlockSolverTraits<6, 6>> BlockSolver;
 
   OptimizationAlgorithm* optimizationAlgorithm =
-      new OptimizationAlgorithmGaussNewton(std::make_unique<BlockSolver>(
-          std::make_unique<LinearSolverEigen<BlockSolver::PoseMatrixType>>()));
+      new OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolver>(
+          g2o::make_unique<LinearSolverEigen<BlockSolver::PoseMatrixType>>()));
 
   optimizer.setAlgorithm(optimizationAlgorithm);
 
@@ -101,8 +101,7 @@ int main() {
     // Construct the accelerometer measurement
     Vector3d accelerometerMeasurement;
     for (int m = 0; m < 3; m++) {
-      accelerometerMeasurement[m] =
-          processNoise[m] + accelerometerNoiseSigma * sampleGaussian();
+      accelerometerMeasurement[m] = processNoise[m] + accelerometerNoiseSigma * sampleGaussian();
     }
 
     // Construct the GPS observation
@@ -118,14 +117,11 @@ int main() {
     stateNode->setMarginalized(false);
     optimizer.addVertex(stateNode);
 
-    TargetOdometry3DEdge* toe =
-        new TargetOdometry3DEdge(dt, accelerometerNoiseSigma);
+    TargetOdometry3DEdge* toe = new TargetOdometry3DEdge(dt, accelerometerNoiseSigma);
     toe->setVertex(0, lastStateNode);
     toe->setVertex(1, stateNode);
-    VertexPositionVelocity3D* vPrev =
-        dynamic_cast<VertexPositionVelocity3D*>(lastStateNode);
-    VertexPositionVelocity3D* vCurr =
-        dynamic_cast<VertexPositionVelocity3D*>(stateNode);
+    VertexPositionVelocity3D* vPrev = dynamic_cast<VertexPositionVelocity3D*>(lastStateNode);
+    VertexPositionVelocity3D* vCurr = dynamic_cast<VertexPositionVelocity3D*>(stateNode);
     toe->setMeasurement(accelerometerMeasurement);
     optimizer.addEdge(toe);
 
@@ -163,14 +159,10 @@ int main() {
 #endif
 
   Vector6d v1 = dynamic_cast<VertexPositionVelocity3D*>(
-                    optimizer.vertices()
-                        .find((std::max)(numberOfTimeSteps - 2, 0))
-                        ->second)
+                    optimizer.vertices().find((std::max)(numberOfTimeSteps - 2, 0))->second)
                     ->estimate();
   Vector6d v2 = dynamic_cast<VertexPositionVelocity3D*>(
-                    optimizer.vertices()
-                        .find((std::max)(numberOfTimeSteps - 1, 0))
-                        ->second)
+                    optimizer.vertices().find((std::max)(numberOfTimeSteps - 1, 0))->second)
                     ->estimate();
   cout << "v1=\n" << v1 << endl;
   cout << "v2=\n" << v2 << endl;

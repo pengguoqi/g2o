@@ -26,8 +26,6 @@
 
 #include "edge_se2_lotsofxy.h"
 
-#include <cassert>
-
 #ifdef G2O_HAVE_OPENGL
 #include "g2o/stuff/opengl_primitives.h"
 #include "g2o/stuff/opengl_wrapper.h"
@@ -35,10 +33,7 @@
 
 namespace g2o {
 
-EdgeSE2LotsOfXY::EdgeSE2LotsOfXY()
-    : BaseVariableSizedEdge<-1, VectorX>(), _observedPoints(0) {
-  resize(0);
-}
+EdgeSE2LotsOfXY::EdgeSE2LotsOfXY() : BaseVariableSizedEdge<-1, VectorX>(), _observedPoints(0) { resize(0); }
 
 void EdgeSE2LotsOfXY::computeError() {
   VertexSE2* pose = static_cast<VertexSE2*>(_vertices[0]);
@@ -101,12 +96,12 @@ bool EdgeSE2LotsOfXY::write(std::ostream& os) const {
 
 void EdgeSE2LotsOfXY::linearizeOplus() {
   const VertexSE2* vi = static_cast<const VertexSE2*>(_vertices[0]);
-  const double& x1 = vi->estimate().translation()[0];
-  const double& y1 = vi->estimate().translation()[1];
-  const double& th1 = vi->estimate().rotation().angle();
+  const number_t& x1 = vi->estimate().translation()[0];
+  const number_t& y1 = vi->estimate().translation()[1];
+  const number_t& th1 = vi->estimate().rotation().angle();
 
-  double ct = std::cos(th1);
-  double st = std::sin(th1);
+  number_t ct = std::cos(th1);
+  number_t st = std::sin(th1);
 
   MatrixX Ji;
   unsigned int rows = 2 * (_vertices.size() - 1);
@@ -121,8 +116,8 @@ void EdgeSE2LotsOfXY::linearizeOplus() {
   for (unsigned int i = 1; i < _vertices.size(); i++) {
     g2o::VertexPointXY* point = (g2o::VertexPointXY*)(_vertices[i]);
 
-    const double& x2 = point->estimate()[0];
-    const double& y2 = point->estimate()[1];
+    const number_t& x2 = point->estimate()[0];
+    const number_t& y2 = point->estimate()[1];
 
     unsigned int index = 2 * (i - 1);
 
@@ -141,18 +136,23 @@ void EdgeSE2LotsOfXY::linearizeOplus() {
   _jacobianOplus[0] = Ji;
 }
 
-void EdgeSE2LotsOfXY::initialEstimate(const OptimizableGraph::VertexSet& fixed,
-                                      OptimizableGraph::Vertex* toEstimate) {
+void EdgeSE2LotsOfXY::initialEstimate(const OptimizableGraph::VertexSet& fixed, OptimizableGraph::Vertex* toEstimate) {
   (void)toEstimate;
 
-  assert(initialEstimatePossible(fixed, toEstimate) &&
-         "Bad vertices specified");
+  assert(initialEstimatePossible(fixed, toEstimate) && "Bad vertices specified");
 
   VertexSE2* pose = static_cast<VertexSE2*>(_vertices[0]);
 
+#ifdef _MSC_VER
   std::vector<bool> estimate_this(_observedPoints, true);
-  for (std::set<HyperGraph::Vertex*>::iterator it = fixed.begin();
-       it != fixed.end(); ++it) {
+#else
+  bool estimate_this[_observedPoints];
+  for (unsigned int i = 0; i < _observedPoints; i++) {
+    estimate_this[i] = true;
+  }
+#endif
+
+  for (std::set<HyperGraph::Vertex*>::iterator it = fixed.begin(); it != fixed.end(); ++it) {
     for (unsigned int i = 1; i < _vertices.size(); i++) {
       VertexPointXY* vert = static_cast<VertexPointXY*>(_vertices[i]);
       if (vert->id() == (*it)->id()) estimate_this[i - 1] = false;
@@ -169,13 +169,11 @@ void EdgeSE2LotsOfXY::initialEstimate(const OptimizableGraph::VertexSet& fixed,
   }
 }
 
-double EdgeSE2LotsOfXY::initialEstimatePossible(
-    const OptimizableGraph::VertexSet& fixed,
-    OptimizableGraph::Vertex* toEstimate) {
+number_t EdgeSE2LotsOfXY::initialEstimatePossible(const OptimizableGraph::VertexSet& fixed,
+                                                  OptimizableGraph::Vertex* toEstimate) {
   (void)toEstimate;
 
-  for (std::set<HyperGraph::Vertex*>::iterator it = fixed.begin();
-       it != fixed.end(); ++it) {
+  for (std::set<HyperGraph::Vertex*>::iterator it = fixed.begin(); it != fixed.end(); ++it) {
     if (_vertices[0]->id() == (*it)->id()) {
       return 1.0;
     }

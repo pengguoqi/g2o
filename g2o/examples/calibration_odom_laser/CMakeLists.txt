@@ -7,25 +7,22 @@ add_library(calibration_odom_laser_library ${G2O_LIB_TYPE}
   g2o_calibration_odom_laser_api.h
 )
 set_target_properties(calibration_odom_laser_library PROPERTIES OUTPUT_NAME ${LIB_PREFIX}calibration_odom_laser)
-set_target_properties(calibration_odom_laser_library PROPERTIES
-  VERSION ${G2O_LIB_VERSION}
-  SOVERSION ${G2O_LIB_SOVERSION})
 target_link_libraries(calibration_odom_laser_library core solver_eigen types_sclam2d types_data)
 
 add_executable(sclam_odom_laser
   sclam_odom_laser.cpp
 )
-set_target_properties(sclam_odom_laser PROPERTIES OUTPUT_NAME sclam_odom_laser)
+set_target_properties(sclam_odom_laser PROPERTIES OUTPUT_NAME sclam_odom_laser${EXE_POSTFIX})
 target_link_libraries(sclam_odom_laser calibration_odom_laser_library)
 
 add_executable(sclam_pure_calibration
   sclam_pure_calibration.cpp
 )
-set_target_properties(sclam_pure_calibration PROPERTIES OUTPUT_NAME sclam_pure_calibration)
+set_target_properties(sclam_pure_calibration PROPERTIES OUTPUT_NAME sclam_pure_calibration${EXE_POSTFIX})
 target_link_libraries(sclam_pure_calibration calibration_odom_laser_library)
 
 add_executable(sclam_laser_calib
   sclam_laser_calib.cpp
 )
-set_target_properties(sclam_laser_calib PROPERTIES OUTPUT_NAME sclam_laser_calib)
+set_target_properties(sclam_laser_calib PROPERTIES OUTPUT_NAME sclam_laser_calib${EXE_POSTFIX})
 target_link_libraries(sclam_laser_calib calibration_odom_laser_library)

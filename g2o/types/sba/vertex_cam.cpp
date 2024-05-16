@@ -26,8 +26,6 @@
 
 #include "vertex_cam.h"
 
-#include "g2o/stuff/logger.h"
-
 namespace g2o {
 
 // constructor
@@ -45,17 +43,16 @@ bool VertexCam::read(std::istream& is) {
   SBACam cam(r, t);
 
   // now fx, fy, cx, cy, baseline
-  double fx;
+  number_t fx, fy, cx, cy, tx;
 
   // try to read one value
   is >> fx;
   if (is.good()) {
-    double fy, cx, cy, tx;
     is >> fy >> cx >> cy >> tx;
     cam.setKcam(fx, fy, cx, cy, tx);
   } else {
     is.clear();
-    G2O_WARN("cam not defined, using defaults");
+    std::cerr << "cam not defined, using defaults" << std::endl;
     cam.setKcam(300, 300, 320, 320, cst(0.1));
   }
 

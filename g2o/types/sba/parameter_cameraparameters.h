@@ -27,10 +27,8 @@
 #ifndef G2O_SBA_CAMERAPARAMETERS_H
 #define G2O_SBA_CAMERAPARAMETERS_H
 
-#include <Eigen/Core>
+#include <g2o/core/parameter.h>
 
-#include "g2o/core/eigen_types.h"
-#include "g2o/core/parameter.h"
 #include "g2o_types_sba_api.h"
 
 namespace g2o {
@@ -39,17 +37,16 @@ class G2O_TYPES_SBA_API CameraParameters : public g2o::Parameter {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   CameraParameters();
-  CameraParameters(double focal_length, const Vector2& principle_point,
-                   double baseline);
+  CameraParameters(number_t focal_length, const Vector2 &principle_point, number_t baseline);
 
-  Vector2 cam_map(const Vector3& trans_xyz) const;
-  Vector3 stereocam_uvu_map(const Vector3& trans_xyz) const;
-  bool read(std::istream& is);
-  bool write(std::ostream& os) const;
+  Vector2 cam_map(const Vector3 &trans_xyz) const;
+  Vector3 stereocam_uvu_map(const Vector3 &trans_xyz) const;
+  bool read(std::istream &is);
+  bool write(std::ostream &os) const;
 
-  double focal_length;
+  number_t focal_length;
   Vector2 principle_point;
-  double baseline;
+  number_t baseline;
 };
 
 }  // namespace g2o

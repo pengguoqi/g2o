@@ -35,54 +35,50 @@ EdgeProjectPSI2UV::EdgeProjectPSI2UV() {
   installParameter(_cam, 0);
 }
 
-bool EdgeProjectPSI2UV::write(std::ostream& os) const {
+bool EdgeProjectPSI2UV::write(std::ostream &os) const {
   writeParamIds(os);
   internal::writeVector(os, measurement());
   return writeInformationMatrix(os);
 }
 
-bool EdgeProjectPSI2UV::read(std::istream& is) {
+bool EdgeProjectPSI2UV::read(std::istream &is) {
   readParamIds(is);
   internal::readVector(is, _measurement);
   return readInformationMatrix(is);
 }
 
 void EdgeProjectPSI2UV::computeError() {
-  const VertexPointXYZ* psi = vertexXn<0>();
-  const VertexSE3Expmap* T_p_from_world = vertexXn<1>();
-  const VertexSE3Expmap* T_anchor_from_world = vertexXn<2>();
-  const CameraParameters* cam =
-      static_cast<const CameraParameters*>(parameter(0));
+  const VertexPointXYZ *psi = vertexXn<0>();
+  const VertexSE3Expmap *T_p_from_world = vertexXn<1>();
+  const VertexSE3Expmap *T_anchor_from_world = vertexXn<2>();
+  const CameraParameters *cam = static_cast<const CameraParameters *>(parameter(0));
 
   Vector2 obs(_measurement);
-  _error = obs - cam->cam_map(T_p_from_world->estimate() *
-                              T_anchor_from_world->estimate().inverse() *
-                              internal::invert_depth(psi->estimate()));
+  _error =
+      obs - cam->cam_map(T_p_from_world->estimate() * T_anchor_from_world->estimate().inverse() *
+                         internal::invert_depth(psi->estimate()));
 }
 
 void EdgeProjectPSI2UV::linearizeOplus() {
-  VertexPointXYZ* vpoint = vertexXn<0>();
+  VertexPointXYZ *vpoint = vertexXn<0>();
   Vector3 psi_a = vpoint->estimate();
-  VertexSE3Expmap* vpose = vertexXn<1>();
+  VertexSE3Expmap *vpose = vertexXn<1>();
   SE3Quat T_cw = vpose->estimate();
-  VertexSE3Expmap* vanchor = vertexXn<2>();
-  const CameraParameters* cam =
-      static_cast<const CameraParameters*>(parameter(0));
+  VertexSE3Expmap *vanchor = vertexXn<2>();
+  const CameraParameters *cam = static_cast<const CameraParameters *>(parameter(0));
 
   SE3Quat A_aw = vanchor->estimate();
   SE3Quat T_ca = T_cw * A_aw.inverse();
   Vector3 x_a = internal::invert_depth(psi_a);
   Vector3 y = T_ca * x_a;
-  Eigen::Matrix<double, 2, 3, Eigen::ColMajor> Jcam =
-      internal::d_proj_d_y(cam->focal_length, y);
+  Eigen::Matrix<number_t, 2, 3, Eigen::ColMajor> Jcam = internal::d_proj_d_y(cam->focal_length, y);
 
   auto& jacobianOplus0 = std::get<0>(this->_jacobianOplus);
   auto& jacobianOplus1 = std::get<1>(this->_jacobianOplus);
   auto& jacobianOplus2 = std::get<2>(this->_jacobianOplus);
   jacobianOplus0 = -Jcam * internal::d_Tinvpsi_d_psi(T_ca, psi_a);
   jacobianOplus1 = -Jcam * internal::d_expy_d_y(y);
-  jacobianOplus2 =
-      Jcam * T_ca.rotation().toRotationMatrix() * internal::d_expy_d_y(x_a);
+  jacobianOplus2 = Jcam * T_ca.rotation().toRotationMatrix() * internal::d_expy_d_y(x_a);
 }
 
 }  // namespace g2o

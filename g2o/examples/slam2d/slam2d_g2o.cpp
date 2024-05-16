@@ -19,8 +19,12 @@
 #include <QApplication>
 #include <iostream>
 
+#include "g2o/core/block_solver.h"
 #include "g2o/core/factory.h"
+#include "g2o/core/optimization_algorithm_gauss_newton.h"
+#include "g2o/core/optimization_algorithm_levenberg.h"
 #include "g2o/core/sparse_optimizer.h"
+#include "g2o/solvers/eigen/linear_solver_eigen.h"
 #include "main_window.h"
 using namespace std;
 using namespace g2o;
@@ -31,8 +35,25 @@ int main(int argc, char** argv) {
   QApplication qapp(argc, argv);
 
   MainWindow mw;
-  mw.viewer->graph = new SparseOptimizer();
   mw.show();
 
+  mw.viewer->graph = new SparseOptimizer();
+
+  typedef BlockSolver<BlockSolverTraits<-1, -1> > SlamBlockSolver;
+  typedef LinearSolverEigen<SlamBlockSolver::PoseMatrixType> SlamLinearSolver;
+
+  // Gauss Newton
+  auto linearSolverGN = g2o::make_unique<SlamLinearSolver>();
+  linearSolverGN->setBlockOrdering(false);
+  mw.solverGaussNewton = new OptimizationAlgorithmGaussNewton(
+      g2o::make_unique<SlamBlockSolver>(std::move(linearSolverGN)));
+
+  // Levenberg
+  auto linearSolverLM = g2o::make_unique<SlamLinearSolver>();
+  linearSolverLM->setBlockOrdering(false);
+  mw.solverLevenberg = new OptimizationAlgorithmLevenberg(
+      g2o::make_unique<SlamBlockSolver>(std::move(linearSolverLM)));
+
+  mw.viewer->graph->setAlgorithm(mw.solverGaussNewton);
   return qapp.exec();
 }

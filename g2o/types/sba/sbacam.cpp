@@ -62,9 +62,8 @@ void SBACam::update(const Vector6& update) {
   // small quaternion update
   Quaternion qr;
   qr.vec() = update.segment<3>(3);
-  qr.w() =
-      sqrt(cst(1.0) - qr.vec().squaredNorm());  // should always be positive
-  _r *= qr;                                     // post-multiply
+  qr.w() = sqrt(cst(1.0) - qr.vec().squaredNorm());  // should always be positive
+  _r *= qr;                                          // post-multiply
   _r.normalize();
   setTransform();
   setProjection();
@@ -72,7 +71,7 @@ void SBACam::update(const Vector6& update) {
 }
 
 // transforms
-void SBACam::transformW2F(Eigen::Matrix<double, 3, 4>& m, const Vector3& trans,
+void SBACam::transformW2F(Eigen::Matrix<number_t, 3, 4>& m, const Vector3& trans,
                           const Quaternion& qrot) {
   m.block<3, 3>(0, 0) = qrot.toRotationMatrix().transpose();
   m.col(3).setZero();  // make sure there's no translation
@@ -82,14 +81,14 @@ void SBACam::transformW2F(Eigen::Matrix<double, 3, 4>& m, const Vector3& trans,
   m.col(3) = -m * tt;
 }
 
-void SBACam::transformF2W(Eigen::Matrix<double, 3, 4>& m, const Vector3& trans,
+void SBACam::transformF2W(Eigen::Matrix<number_t, 3, 4>& m, const Vector3& trans,
                           const Quaternion& qrot) {
   m.block<3, 3>(0, 0) = qrot.toRotationMatrix();
   m.col(3) = trans;
 }
 
 // set up camera matrix
-void SBACam::setKcam(double fx, double fy, double cx, double cy, double tx) {
+void SBACam::setKcam(number_t fx, number_t fy, number_t cx, number_t cy, number_t tx) {
   Kcam.setZero();
   Kcam(0, 0) = fx;
   Kcam(1, 1) = fy;
@@ -105,15 +104,14 @@ void SBACam::setKcam(double fx, double fy, double cx, double cy, double tx) {
 // sets angle derivatives
 void SBACam::setDr() {
   // inefficient, just for testing
-  // use simple multiplications and additions for production code in calculating
-  // dRdx,y,z
+  // use simple multiplications and additions for production code in calculating dRdx,y,z
   Matrix3 dRidx, dRidy, dRidz;
-  dRidx << cst(0.0), cst(0.0), cst(0.0), cst(0.0), cst(0.0), cst(2.0), cst(0.0),
-      cst(-2.0), cst(0.0);
-  dRidy << cst(0.0), cst(0.0), cst(-2.0), cst(0.0), cst(0.0), cst(0.0),
-      cst(2.0), cst(0.0), cst(0.0);
-  dRidz << cst(0.0), cst(2.0), cst(0.0), cst(-2.0), cst(0.0), cst(0.0),
-      cst(0.0), cst(0.0), cst(0.0);
+  dRidx << cst(0.0), cst(0.0), cst(0.0), cst(0.0), cst(0.0), cst(2.0), cst(0.0), cst(-2.0),
+      cst(0.0);
+  dRidy << cst(0.0), cst(0.0), cst(-2.0), cst(0.0), cst(0.0), cst(0.0), cst(2.0), cst(0.0),
+      cst(0.0);
+  dRidz << cst(0.0), cst(2.0), cst(0.0), cst(-2.0), cst(0.0), cst(0.0), cst(0.0), cst(0.0),
+      cst(0.0);
 
   // for dS'*R', with dS the incremental change
   dRdx = dRidx * w2n.block<3, 3>(0, 0);

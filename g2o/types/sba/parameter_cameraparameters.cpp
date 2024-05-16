@@ -33,14 +33,11 @@ namespace g2o {
 CameraParameters::CameraParameters()
     : focal_length(1.), principle_point(Vector2(0., 0.)), baseline(0.5) {}
 
-CameraParameters::CameraParameters(double focal_length,
-                                   const Vector2& principle_point,
-                                   double baseline)
-    : focal_length(focal_length),
-      principle_point(principle_point),
-      baseline(baseline) {}
+CameraParameters::CameraParameters(number_t focal_length, const Vector2 &principle_point,
+                                   number_t baseline)
+    : focal_length(focal_length), principle_point(principle_point), baseline(baseline) {}
 
-bool CameraParameters::read(std::istream& is) {
+bool CameraParameters::read(std::istream &is) {
   is >> focal_length;
   is >> principle_point[0];
   is >> principle_point[1];
@@ -48,7 +45,7 @@ bool CameraParameters::read(std::istream& is) {
   return true;
 }
 
-bool CameraParameters::write(std::ostream& os) const {
+bool CameraParameters::write(std::ostream &os) const {
   os << focal_length << " ";
   os << principle_point.x() << " ";
   os << principle_point.y() << " ";
@@ -56,7 +53,7 @@ bool CameraParameters::write(std::ostream& os) const {
   return true;
 }
 
-Vector2 CameraParameters::cam_map(const Vector3& trans_xyz) const {
+Vector2 CameraParameters::cam_map(const Vector3 &trans_xyz) const {
   Vector2 proj = project(trans_xyz);
   Vector2 res;
   res[0] = proj[0] * focal_length + principle_point[0];
@@ -64,10 +61,10 @@ Vector2 CameraParameters::cam_map(const Vector3& trans_xyz) const {
   return res;
 }
 
-Vector3 CameraParameters::stereocam_uvu_map(const Vector3& trans_xyz) const {
+Vector3 CameraParameters::stereocam_uvu_map(const Vector3 &trans_xyz) const {
   Vector2 uv_left = cam_map(trans_xyz);
-  double proj_x_right = (trans_xyz[0] - baseline) / trans_xyz[2];
-  double u_right = proj_x_right * focal_length + principle_point[0];
+  number_t proj_x_right = (trans_xyz[0] - baseline) / trans_xyz[2];
+  number_t u_right = proj_x_right * focal_length + principle_point[0];
   return Vector3(uv_left[0], uv_left[1], u_right);
 }
 

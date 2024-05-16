@@ -124,7 +124,7 @@
         <widget class="QComboBox" name="coOptimizer"/>
        </item>
        <item>
-        <widget class="QPushButton" name="btnOptimizerParameters">
+        <widget class="QPushButton" name="btnOptimizerParamaters">
          <property name="toolTip">
           <string>Adjust the parameters of the optimizer</string>
          </property>

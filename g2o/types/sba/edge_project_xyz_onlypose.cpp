@@ -28,24 +28,24 @@
 
 namespace g2o {
 
-bool EdgeSE3ProjectXYZOnlyPose::read(std::istream& is) {
+bool EdgeSE3ProjectXYZOnlyPose::read(std::istream &is) {
   internal::readVector(is, _measurement);
   return readInformationMatrix(is);
 }
 
-bool EdgeSE3ProjectXYZOnlyPose::write(std::ostream& os) const {
+bool EdgeSE3ProjectXYZOnlyPose::write(std::ostream &os) const {
   internal::writeVector(os, measurement());
   return writeInformationMatrix(os);
 }
 
 void EdgeSE3ProjectXYZOnlyPose::linearizeOplus() {
-  VertexSE3Expmap* vi = static_cast<VertexSE3Expmap*>(_vertices[0]);
+  VertexSE3Expmap *vi = static_cast<VertexSE3Expmap *>(_vertices[0]);
   Vector3 xyz_trans = vi->estimate().map(Xw);
 
-  double x = xyz_trans[0];
-  double y = xyz_trans[1];
-  double invz = 1.0 / xyz_trans[2];
-  double invz_2 = invz * invz;
+  number_t x = xyz_trans[0];
+  number_t y = xyz_trans[1];
+  number_t invz = 1.0 / xyz_trans[2];
+  number_t invz_2 = invz * invz;
 
   _jacobianOplusXi(0, 0) = x * y * invz_2 * fx;
   _jacobianOplusXi(0, 1) = -(1 + (x * x * invz_2)) * fx;
@@ -62,7 +62,7 @@ void EdgeSE3ProjectXYZOnlyPose::linearizeOplus() {
   _jacobianOplusXi(1, 5) = y * invz_2 * fy;
 }
 
-Vector2 EdgeSE3ProjectXYZOnlyPose::cam_project(const Vector3& trans_xyz) const {
+Vector2 EdgeSE3ProjectXYZOnlyPose::cam_project(const Vector3 &trans_xyz) const {
   Vector2 proj = project(trans_xyz);
   Vector2 res;
   res[0] = proj[0] * fx + cx;
@@ -71,13 +71,13 @@ Vector2 EdgeSE3ProjectXYZOnlyPose::cam_project(const Vector3& trans_xyz) const {
 }
 
 void EdgeSE3ProjectXYZOnlyPose::computeError() {
-  const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[0]);
+  const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
   Vector2 obs(_measurement);
   _error = obs - cam_project(v1->estimate().map(Xw));
 }
 
 bool EdgeSE3ProjectXYZOnlyPose::isDepthPositive() {
-  const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[0]);
+  const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
   return (v1->estimate().map(Xw))(2) > 0;
 }
 

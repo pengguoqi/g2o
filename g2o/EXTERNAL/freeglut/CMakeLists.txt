@@ -5,16 +5,8 @@ add_library(freeglut_minimal ${G2O_LIB_TYPE}
 )
 
 target_link_libraries(freeglut_minimal PUBLIC ${G2O_OPENGL_TARGET})
-target_include_directories(freeglut_minimal PUBLIC
-  "$<BUILD_INTERFACE:${g2o_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
-  $<INSTALL_INTERFACE:include/g2o/freeglut_minimal>
-)
-target_compile_features(freeglut_minimal PUBLIC cxx_std_17)
 
 set_target_properties(freeglut_minimal PROPERTIES OUTPUT_NAME ${LIB_PREFIX}ext_freeglut_minimal)
-set_target_properties(freeglut_minimal PROPERTIES
-  VERSION ${G2O_LIB_VERSION}
-  SOVERSION ${G2O_LIB_SOVERSION})
 if (APPLE)
   set_target_properties(freeglut_minimal PROPERTIES INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 endif()

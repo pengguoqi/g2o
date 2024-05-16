@@ -28,8 +28,6 @@
 
 #include <cassert>
 
-#include "g2o/stuff/logger.h"
-
 using namespace std;
 
 namespace g2o {
@@ -44,12 +42,11 @@ RobustKernelFactory* RobustKernelFactory::instance() {
   return factoryInstance.get();
 }
 
-void RobustKernelFactory::registerRobustKernel(
-    const std::string& tag, const AbstractRobustKernelCreator::Ptr& c) {
+void RobustKernelFactory::registerRobustKernel(const std::string& tag,
+                                               const AbstractRobustKernelCreator::Ptr& c) {
   CreatorMap::const_iterator foundIt = _creator.find(tag);
   if (foundIt != _creator.end()) {
-    G2O_WARN("RobustKernelFactory WARNING: Overwriting robust kernel tag {}",
-             tag);
+    cerr << "RobustKernelFactory WARNING: Overwriting robust kernel tag " << tag << endl;
     assert(0);
   }
 
@@ -71,8 +68,7 @@ RobustKernel* RobustKernelFactory::construct(const std::string& tag) const {
   return nullptr;
 }
 
-AbstractRobustKernelCreator* RobustKernelFactory::creator(
-    const std::string& tag) const {
+AbstractRobustKernelCreator* RobustKernelFactory::creator(const std::string& tag) const {
   CreatorMap::const_iterator foundIt = _creator.find(tag);
   if (foundIt != _creator.end()) {
     return foundIt->second.get();
@@ -80,11 +76,9 @@ AbstractRobustKernelCreator* RobustKernelFactory::creator(
   return nullptr;
 }
 
-void RobustKernelFactory::fillKnownKernels(
-    std::vector<std::string>& types) const {
+void RobustKernelFactory::fillKnownKernels(std::vector<std::string>& types) const {
   types.clear();
-  for (CreatorMap::const_iterator it = _creator.begin(); it != _creator.end();
-       ++it)
+  for (CreatorMap::const_iterator it = _creator.begin(); it != _creator.end(); ++it)
     types.push_back(it->first);
 }
 
