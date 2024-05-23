@@ -116,16 +116,16 @@ int main()
   cerr << "done." << endl;
 
   cerr << "Optimization: add landmark observations ... ";
-  for (size_t i = 0; i < simulator.landmarkObservations().size(); ++i) {
-    const Simulator::LandmarkEdge& simEdge = simulator.landmarkObservations()[i];
-    EdgeSE2PointXY* landmarkObservation =  new EdgeSE2PointXY;
-    landmarkObservation->vertices()[0] = optimizer.vertex(simEdge.from);
-    landmarkObservation->vertices()[1] = optimizer.vertex(simEdge.to);
-    landmarkObservation->setMeasurement(simEdge.simulatorMeas);
-    landmarkObservation->setInformation(simEdge.information);
-    landmarkObservation->setParameterId(0, sensorOffset->id());
-    optimizer.addEdge(landmarkObservation);
-  }
+  // for (size_t i = 0; i < simulator.landmarkObservations().size(); ++i) {
+  //   const Simulator::LandmarkEdge& simEdge = simulator.landmarkObservations()[i];
+  //   EdgeSE2PointXY* landmarkObservation =  new EdgeSE2PointXY;
+  //   landmarkObservation->vertices()[0] = optimizer.vertex(simEdge.from);
+  //   landmarkObservation->vertices()[1] = optimizer.vertex(simEdge.to);
+  //   landmarkObservation->setMeasurement(simEdge.simulatorMeas);
+  //   landmarkObservation->setInformation(simEdge.information);
+  //   landmarkObservation->setParameterId(0, sensorOffset->id());
+  //   optimizer.addEdge(landmarkObservation);
+  // }
   cerr << "done." << endl;
 
 
